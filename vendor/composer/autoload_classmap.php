@@ -192,6 +192,7 @@ return array(
     'DomainMOD\\Notice' => $baseDir . '/classes/DomainMOD/Notice.php',
     'DomainMOD\\OpenSrs' => $baseDir . '/classes/DomainMOD/OpenSrs.php',
     'DomainMOD\\Porkbun' => $baseDir . '/classes/DomainMOD/Porkbun.php',
+    'DomainMOD\\Infomaniak' => $baseDir . '/classes/DomainMOD/Infomaniak.php',
     'DomainMOD\\QueryBuild' => $baseDir . '/classes/DomainMOD/QueryBuild.php',
     'DomainMOD\\Reporting' => $baseDir . '/classes/DomainMOD/Reporting.php',
     'DomainMOD\\ResellerClub' => $baseDir . '/classes/DomainMOD/ResellerClub.php',

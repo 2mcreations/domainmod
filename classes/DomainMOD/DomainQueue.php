@@ -168,6 +168,13 @@ class DomainQueue
                     list($api_key, $api_secret) = $this->api->getKeySecret($row->account_id);
                     list($domain_count, $domain_list) = $registrar->getDomainList($api_key, $api_secret);
 
+                } elseif ($row->api_registrar_name == 'Infomaniak') {
+
+                    $registrar = new Infomaniak();
+                    $api_key = $this->api->getKey($row->account_id);
+                    $account_id = $this->api->getAccountId($row->account_id);
+                    list($domain_count, $domain_list) = $registrar->getDomainList('', $account_id, $api_key);
+
                 } else {
 
                     return _('Invalid Domain Registrar');
@@ -333,6 +340,13 @@ class DomainQueue
                     $registrar = new ResellerClub();
                     list($reseller_id, $api_key) = $this->api->getResellerIdKey($row->account_id);
                     list($expiration_date, $dns_servers, $privacy_status, $autorenew_status) = $registrar->getFullInfo($reseller_id, $api_key, $row->domain);
+
+                } elseif ($row->api_registrar_name == 'Infomaniak') {
+
+                    $registrar = new Infomaniak();
+                    $api_key = $this->api->getKey($row->account_id);
+                    $account_id = $this->api->getAccountId($row->account_id);
+                    list($expiration_date, $dns_servers, $privacy_status, $autorenew_status) = $registrar->getFullInfo('', $account_id, $api_key, $row->domain);
 
                 } else {
 

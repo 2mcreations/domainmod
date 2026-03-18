@@ -1845,3 +1845,41 @@ if ($current_db_version === '4.22.0') {
     }
 
 } //@formatter:on
+
+// upgrade database from 4.23.0 to 4.24.0
+if ($current_db_version === '4.23.0') {
+
+    $old_version = '4.23.0';
+    $new_version = '4.24.0';
+
+    try {
+
+        $pdo->beginTransaction();
+
+        $pdo->query("
+            INSERT INTO `api_registrars`
+            (`name`, req_account_username, req_account_password, req_account_id, req_reseller_id, req_api_app_name,
+             req_api_key, req_api_secret, req_ip_address, lists_domains, ret_expiry_date, ret_dns_servers,
+             ret_privacy_status, ret_autorenewal_status, notes, insert_time)
+             VALUES
+            ('Infomaniak', '0', '0', '0', '0', '0', '1', '0', '0', '1', '1', '1', '1', '1', '', '" . $timestamp . "')");
+
+        /*
+         * This needs to be MOVED from the last version to the newest version with every release
+         */
+        $goal->upgrade($previous_version);
+
+        $upgrade->database($new_version);
+
+        if ($pdo->InTransaction()) $pdo->commit();
+        $current_db_version = $new_version;
+
+    } catch (Exception $e) {
+
+        if ($pdo->InTransaction()) $pdo->rollback();
+        $upgrade->logFailedUpgrade($old_version, $new_version, $e);
+        throw $e;
+
+    }
+
+} //@formatter:on
