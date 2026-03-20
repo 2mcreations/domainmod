@@ -118,7 +118,6 @@ class Infomaniak
         $expiration_date = '';
         $dns_servers = array();
         $privacy_status = '';
-        $autorenewal_status = '';
 
         // --- Dati dominio: usa cache se disponibile, altrimenti chiama API ---
         if (isset($this->domain_cache[$domain])) {
@@ -138,7 +137,7 @@ class Infomaniak
                 $log_message = 'Unable to get domain details';
                 $log_extra = array('Domain' => $domain, 'API Key' => $this->format->obfusc($api_key));
                 $this->log->error($log_message, $log_extra);
-                return array($expiration_date, $dns_servers, $privacy_status, $autorenewal_status);
+                return array($expiration_date, $dns_servers, $privacy_status);
             }
 
         }
@@ -153,19 +152,6 @@ class Infomaniak
             ? (string) $result['options']['domain_privacy']
             : 'false';
         $privacy_status = $this->processPrivacy($privacy_raw);
-
-        // auto_renew — tenta più campi possibili
-        $autorenewal_raw = 'false';
-        foreach (array('auto_renew', 'renewal_auto', 'autorenew') as $field) {
-            if (isset($result[$field])) {
-                $autorenewal_raw = (string) $result[$field];
-                break;
-            }
-        }
-        if ($autorenewal_raw === 'false' && isset($result['options']['auto_renew'])) {
-            $autorenewal_raw = (string) $result['options']['auto_renew'];
-        }
-        $autorenewal_status = $this->processAutorenew($autorenewal_raw);
 
         // --- Nameservers: GET /2/zones/{domain} ---
         $ns_url = $this->getApiUrl('nameservers', $domain);
@@ -187,7 +173,7 @@ class Infomaniak
 
         }
 
-        return array($expiration_date, $dns_servers, $privacy_status, $autorenewal_status);
+        return array($expiration_date, $dns_servers, $privacy_status);
     }
 
 
@@ -218,17 +204,6 @@ class Infomaniak
             $privacy_status = '0';
         }
         return $privacy_status;
-    }
-
-
-    public function processAutorenew($autorenewal_result)
-    {
-        if ($autorenewal_result === 'true' || $autorenewal_result === '1' || $autorenewal_result === true) {
-            $autorenewal_status = '1';
-        } else {
-            $autorenewal_status = '0';
-        }
-        return $autorenewal_status;
     }
 
 
