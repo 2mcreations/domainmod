@@ -89,7 +89,6 @@ class Infomaniak
                     if (!empty($name)) {
                         $domain_list[] = $name;
                         $domain_count++;
-                        // Cacha tutti i campi già disponibili dalla lista
                         $this->domain_cache[$name] = $domain;
                     }
 
@@ -118,6 +117,7 @@ class Infomaniak
         $expiration_date = '';
         $dns_servers = array();
         $privacy_status = '';
+        $autorenewal_status = '0';
 
         // --- Dati dominio: usa cache se disponibile, altrimenti chiama API ---
         if (isset($this->domain_cache[$domain])) {
@@ -137,7 +137,7 @@ class Infomaniak
                 $log_message = 'Unable to get domain details';
                 $log_extra = array('Domain' => $domain, 'API Key' => $this->format->obfusc($api_key));
                 $this->log->error($log_message, $log_extra);
-                return array($expiration_date, $dns_servers, $privacy_status);
+                return array($expiration_date, $dns_servers, $privacy_status, $autorenewal_status);
             }
 
         }
@@ -147,11 +147,12 @@ class Infomaniak
             $expiration_date = date('Y-m-d', (int) $result['expires_at']);
         }
 
-        // privacy in options.domain_privacy — stringa 'true'/'false'
-        $privacy_raw = isset($result['options']['domain_privacy'])
-            ? (string) $result['options']['domain_privacy']
-            : 'false';
+        // privacy — può essere booleano nativo o stringa
+        $privacy_raw = $result['options']['domain_privacy'] ?? false;
         $privacy_status = $this->processPrivacy($privacy_raw);
+
+        // auto_renew — non disponibile nell'API Infomaniak, fisso a '0'
+        $autorenewal_status = '0';
 
         // --- Nameservers: GET /2/zones/{domain} ---
         $ns_url = $this->getApiUrl('nameservers', $domain);
@@ -165,7 +166,6 @@ class Infomaniak
 
         } else {
 
-            // Fallback: nameservers non disponibili, usa placeholder
             $log_message = 'Unable to get nameservers, using placeholder';
             $log_extra = array('Domain' => $domain);
             $this->log->warning($log_message, $log_extra);
@@ -173,7 +173,7 @@ class Infomaniak
 
         }
 
-        return array($expiration_date, $dns_servers, $privacy_status);
+        return array($expiration_date, $dns_servers, $privacy_status, $autorenewal_status);
     }
 
 
@@ -198,12 +198,19 @@ class Infomaniak
 
     public function processPrivacy($privacy_result)
     {
-        if ($privacy_result === 'true' || $privacy_result === '1' || $privacy_result === true) {
-            $privacy_status = '1';
-        } else {
-            $privacy_status = '0';
+        if ($privacy_result === true || $privacy_result === 'true' || $privacy_result === '1') {
+            return '1';
         }
-        return $privacy_status;
+        return '0';
+    }
+
+
+    public function processAutorenew($autorenewal_result)
+    {
+        if ($autorenewal_result === true || $autorenewal_result === 'true' || $autorenewal_result === '1') {
+            return '1';
+        }
+        return '0';
     }
 
 
